@@ -1,0 +1,180 @@
+* Scope of the exercise
+  I'm writing a program that analyses a melody with whole notes, like
+  the one we can find in a cantus firmus, highlighting the incorrect
+  melodic intervals.
+** Imports
+  We begin with an importing the library and defining the good melodic
+  intervals for counterpoint (note that I'm not using the analog
+  functions in the library because they accept the seventh:
+
+#+BEGIN_SRC haskell
+import Music.Prelude
+
+permittedMelodicIntervals :: [Interval]
+permittedMelodicIntervals = [ perfect unison, major second, minor second
+                            , major third,    minor third,  perfect fourth
+                            , perfect fifth,  major sixth,  minor sixth
+                            , perfect octave]
+#+END_SRC
+
+** Definition of the type of voice
+   We begin with the type of a cantus-like voice.
+   
+   For this we can use *Voice* from =Music.Time.Voice=, in
+   =music-score=, which represents a sequence of *things with a
+   duration*.
+   For counterpoint, you want the "thing" to be simply a
+   pitch, i.e. *Voice Pitch*.
+
+   To allow rests, use *Voice (Maybe Pitch)*.
+
+   To convert to a score you can use the new Music.Score.Aligned
+   module which allow you align such a voice at any point in time
+   (i.e. aligned 0 0 to put its beginning at time 0, aligned 2 0.5 to
+   put its middle at time 2 etc.)
+
+   Then we should be able to talk about the absolute position of the
+   music in time (so that we can), so we augment this with *Aligned (Voice a)*
+
+   in the setting with multiple counterpoints this will become
+   *[Aligned (Voice a)]* , which not only gives you the voices, but
+   also their orientation in absolute time. 
+
+   Thus you should be able to traverse the music vertically and check
+   that dissonances are correctly resolved, only occur on weak beats
+   without preparation etc. 
+
+   Understanding the difference between vectors and points (and why
+   voices and notes are sort-of vectors) is crucial here.
+
+#+BEGIN_SRC haskell
+type Counterpoint = Aligned (Voice Pitch)
+
+cantus :: Counterpoint 
+cantus = [d, a, g, f, e, d, f, e, d] ^. voice . to (aligned 0 0)
+#+END_SRC
+
+   
+Now, we are moving toward the rendering phase, so, we trace down the
+function *writeLilypond* in =Music.Score.Export.Lilypond=, because:
+
+1) The open function is somewhat broken, in my system, because it
+   tries to force a program to open the generated pdf. On the other
+   side, I really like the fact that it cleans the intermediate
+   files. Maybe there could be middle ground between the to
+   options, maybe:
+   * writeLilypond :: could generate only the lilypond file
+   * createPdf :: could use the lilypond file to also compile the pdf,
+                  cleaning the intermediate files, without forcing
+                  open the file.
+   * openLilypond :: compiles the pdf and forces opening 
+2) The position of the lilypond function is a bit odd. Should
+   music-score contain also the export stuff? It seems that it's
+   slowly becoming a sort of kitchen sink.
+3) We have that =writeLilypond :: HasLilypond a => FilePath -> a -> IO
+     ()=, so that we ask ourselves if =HasLilypond (Aligned (Voice Pitch))=.
+     Now, how should we answer to this?
+     #+BEGIN_EXAMPLE
+     ghci> :i Aligned
+
+     [...]
+     instance Show a => Show (Aligned a)
+     -- Defined in ‘Music.Time.Aligned’
+     instance HasDuration v => HasPosition (Aligned v)
+     -- Defined in ‘Music.Time.Aligned’
+     instance Transformable v => Transformable (Aligned v)
+     -- Defined in ‘Music.Time.Aligned’
+     instance HasDuration v => HasDuration (Aligned v)
+     -- Defined in ‘Music.Time.Aligned’
+     #+END_EXAMPLE
+     So, it seems that we have not the instance we are searching for
+     (is there a better way to tell?). So, let's try to use it anyways, and let's see the error:
+
+     #+BEGIN_EXAMPLE
+     ghci> writeLilypond "ook" . renderAlignedVoice $ cantus 
+     
+     <interactive>:94:1:
+    Couldn't match type ‘Music.Score.Articulation.Articulation
+                           (SetArticulation
+                              (Data.Functor.Context.Ctxt
+                                 (Data.Monoid.Average.Average Double,
+                                  Data.Monoid.Average.Average Double))
+                              (SetDynamic
+                                 Music.Score.Export.DynamicNotation.DynamicNotation
+                                 (SetDynamic (Data.Functor.Context.Ctxt (Dynamic Pitch)) Pitch)))’
+                  with ‘Data.Functor.Context.Ctxt
+                          (Data.Monoid.Average.Average Double,
+                           Data.Monoid.Average.Average Double)’
+     In the first argument of ‘(.)’, namely ‘writeLilypond "ook"’
+     In the expression: writeLilypond "ook" . renderAlignedVoice
+     In the expression: writeLilypond "ook" . renderAlignedVoice $ cantus
+     #+END_EXAMPLE
+
+     This strongly suggest me to consider something like
+     *StandardNote* that I saw in the Prelude (I'd like the
+     documentation to be more clear on this).
+
+     Luckily, in =Music.Time.Aligned= module, we found
+     =renderAlignedVoice :: Aligned (Voice a) -> Score a=. Plausibly
+     it will be easy to render a Score!
+
+     #+BEGIN_EXAMPLE
+     ghci> :i Score
+
+     [...]
+     instance (HasDynamicNotation a b c, HasArticulationNotation c d e,
+          Music.Score.Part.Part e ~ Music.Score.Part.Part c, HasOrdPart a,
+          Transformable a, Semigroup a, Tiable e, HasOrdPart c,
+          Show (Music.Score.Part.Part c),
+          HasLilypondInstrument (Music.Score.Part.Part c),
+          Music.Score.Export.Lilypond.Satisfied) =>
+         HasBackendScore Lilypond (Score a)
+     -- Defined in ‘Music.Score.Export.Lilypond’
+     [...]
+     #+END_EXAMPLE
+     Hmm, Lilypond stuff, let's do this. So ok, now we have a *Score
+     Pitch* and we want a *Score StandardNote*. *fmap* comes
+     immediately to mind, but there is not a function which turns a
+     Pitch into a StandardNote (why?). Luckily again, the author
+     suggested me the solution: 
+ 
+#+BEGIN_SRC haskell
+render :: Counterpoint -> Score StandardNote
+render = fmap (fromPitch' . pure) . renderAlignedVoice 
+
+action :: IO ()
+action = writeLilypond "cantus.ly" $ render cantus
+#+END_SRC
+
+The problem is whith the type of the things:
+#+BEGIN_EXAMPLE
+pure :: Pitch -> Behaviour Pitch
+fromPitch' :: Behaviour Pitch -> StandardNote
+#+END_EXAMPLE
+To convert between a Pitch and a StandardNote, I had to pass through a *Behaviour*.
+I couln't imagine this on my own!
+
+So, here is't the first installment. Next time I'll try to add
+annotations to that score, a feature that seems broken for the time
+being. Here is the complete code we wrote:
+
+#+BEGIN_SRC haskell
+import Music.Prelude
+
+permittedMelodicIntervals :: [Interval]
+permittedMelodicIntervals = [ perfect unison, major second, minor second
+                            , major third,    minor third,  perfect fourth
+                            , perfect fifth,  major sixth,  minor sixth
+                            , perfect octave]
+
+type Counterpoint = Aligned (Voice Pitch)
+
+cantus :: Counterpoint 
+cantus = [d, a, g, f, e, d, f, e, d] ^. voice . to (aligned 0 0)
+
+render :: Counterpoint -> Score StandardNote
+render = fmap (fromPitch' . pure) . renderAlignedVoice 
+
+action :: IO ()
+action = writeLilypond "cantus.ly" $ render cantus
+#+END_SRC

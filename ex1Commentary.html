@@ -1,0 +1,408 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<title>ex1Commentary</title>
+<!-- 2014-12-08 Mon 09:01 -->
+<meta  http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta  name="generator" content="Org-mode" />
+<meta  name="author" content="Carlo Nucera" />
+<style type="text/css">
+ <!--/*--><![CDATA[/*><!--*/
+  .title  { text-align: center; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { color: green; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #ccc;
+    box-shadow: 3px 3px 3px #eee;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: visible;
+    padding-top: 1.2em;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    background-color: white;
+    top: -10px;
+    right: 10px;
+    padding: 3px;
+    border: 1px solid black;
+  }
+  pre.src:hover:before { display: inline;}
+  pre.src-sh:before    { content: 'sh'; }
+  pre.src-bash:before  { content: 'sh'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-R:before     { content: 'R'; }
+  pre.src-perl:before  { content: 'Perl'; }
+  pre.src-java:before  { content: 'Java'; }
+  pre.src-sql:before   { content: 'SQL'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.right  { text-align: center;  }
+  th.left   { text-align: center;   }
+  th.center { text-align: center; }
+  td.right  { text-align: right;  }
+  td.left   { text-align: left;   }
+  td.center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara:nth-child(2) { display: inline; }
+  .footpara { display: block; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  /*]]>*/-->
+</style>
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2013 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">ex1Commentary</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#sec-1">1. Scope of the exercise</a>
+<ul>
+<li><a href="#sec-1-1">1.1. Imports</a></li>
+<li><a href="#sec-1-2">1.2. Definition of the type of voice</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-sec-1" class="outline-2">
+<h2 id="sec-1"><span class="section-number-2">1</span> Scope of the exercise</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+I'm writing a program that analyses a melody with whole notes, like
+the one we can find in a cantus firmus, highlighting the incorrect
+melodic intervals.
+</p>
+</div>
+<div id="outline-container-sec-1-1" class="outline-3">
+<h3 id="sec-1-1"><span class="section-number-3">1.1</span> Imports</h3>
+<div class="outline-text-3" id="text-1-1">
+<p>
+We begin with an importing the library and defining the good melodic
+intervals for counterpoint (note that I'm not using the analog
+functions in the library because they accept the seventh:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-haskell">import Music.Prelude
+
+permittedMelodicIntervals :: [Interval]
+permittedMelodicIntervals = [ perfect unison, major second, minor second
+                            , major third,    minor third,  perfect fourth
+                            , perfect fifth,  major sixth,  minor sixth
+                            , perfect octave]
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-1-2" class="outline-3">
+<h3 id="sec-1-2"><span class="section-number-3">1.2</span> Definition of the type of voice</h3>
+<div class="outline-text-3" id="text-1-2">
+<p>
+We begin with the type of a cantus-like voice.
+</p>
+
+<p>
+For this we can use <b>Voice</b> from <code>Music.Time.Voice</code>, in
+<code>music-score</code>, which represents a sequence of <b>things with a
+duration</b>.
+For counterpoint, you want the "thing" to be simply a
+pitch, i.e. <b>Voice Pitch</b>.
+</p>
+
+<p>
+To allow rests, use <b>Voice (Maybe Pitch)</b>.
+</p>
+
+<p>
+To convert to a score you can use the new Music.Score.Aligned
+module which allow you align such a voice at any point in time
+(i.e. aligned 0 0 to put its beginning at time 0, aligned 2 0.5 to
+put its middle at time 2 etc.)
+</p>
+
+<p>
+Then we should be able to talk about the absolute position of the
+music in time (so that we can), so we augment this with <b>Aligned (Voice a)</b>
+</p>
+
+<p>
+in the setting with multiple counterpoints this will become
+<b>[Aligned (Voice a)]</b> , which not only gives you the voices, but
+also their orientation in absolute time. 
+</p>
+
+<p>
+Thus you should be able to traverse the music vertically and check
+that dissonances are correctly resolved, only occur on weak beats
+without preparation etc. 
+</p>
+
+<p>
+Understanding the difference between vectors and points (and why
+voices and notes are sort-of vectors) is crucial here.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-haskell">type Counterpoint = Aligned (Voice Pitch)
+
+cantus :: Counterpoint 
+cantus = [d, a, g, f, e, d, f, e, d] ^. voice . to (aligned 0 0)
+</pre>
+</div>
+
+
+<p>
+Now, we are moving toward the rendering phase, so, we trace down the
+function <b>writeLilypond</b> in <code>Music.Score.Export.Lilypond</code>, because:
+</p>
+
+<ol class="org-ol">
+<li>The open function is somewhat broken, in my system, because it
+tries to force a program to open the generated pdf. On the other
+side, I really like the fact that it cleans the intermediate
+files. Maybe there could be middle ground between the to
+options, maybe:
+<dl class="org-dl">
+<dt> writeLilypond </dt><dd>could generate only the lilypond file
+</dd>
+<dt> createPdf </dt><dd>could use the lilypond file to also compile the pdf,
+cleaning the intermediate files, without forcing
+open the file.
+</dd>
+<dt> openLilypond </dt><dd>compiles the pdf and forces opening 
+</dd>
+</dl>
+</li>
+<li>The position of the lilypond function is a bit odd. Should
+music-score contain also the export stuff? It seems that it's
+slowly becoming a sort of kitchen sink.
+</li>
+<li>We have that <code>writeLilypond :: HasLilypond a =&gt; FilePath -&gt; a -&gt; IO
+     ()</code>, so that we ask ourselves if <code>HasLilypond (Aligned (Voice Pitch))</code>.
+Now, how should we answer to this?
+<pre class="example">
+ghci&gt; :i Aligned
+
+[...]
+instance Show a =&gt; Show (Aligned a)
+-- Defined in ‘Music.Time.Aligned’
+instance HasDuration v =&gt; HasPosition (Aligned v)
+-- Defined in ‘Music.Time.Aligned’
+instance Transformable v =&gt; Transformable (Aligned v)
+-- Defined in ‘Music.Time.Aligned’
+instance HasDuration v =&gt; HasDuration (Aligned v)
+-- Defined in ‘Music.Time.Aligned’
+</pre>
+<p>
+So, it seems that we have not the instance we are searching for
+(is there a better way to tell?). So, let's try to use it anyways, and let's see the error:
+</p>
+
+<pre class="example">
+ ghci&gt; writeLilypond "ook" . renderAlignedVoice $ cantus 
+
+ &lt;interactive&gt;:94:1:
+Couldn't match type ‘Music.Score.Articulation.Articulation
+                       (SetArticulation
+                          (Data.Functor.Context.Ctxt
+                             (Data.Monoid.Average.Average Double,
+                              Data.Monoid.Average.Average Double))
+                          (SetDynamic
+                             Music.Score.Export.DynamicNotation.DynamicNotation
+                             (SetDynamic (Data.Functor.Context.Ctxt (Dynamic Pitch)) Pitch)))’
+              with ‘Data.Functor.Context.Ctxt
+                      (Data.Monoid.Average.Average Double,
+                       Data.Monoid.Average.Average Double)’
+ In the first argument of ‘(.)’, namely ‘writeLilypond "ook"’
+ In the expression: writeLilypond "ook" . renderAlignedVoice
+ In the expression: writeLilypond "ook" . renderAlignedVoice $ cantus
+</pre>
+
+<p>
+This strongly suggest me to consider something like
+<b>StandardNote</b> that I saw in the Prelude (I'd like the
+documentation to be more clear on this).
+</p>
+
+<p>
+Luckily, in <code>Music.Time.Aligned</code> module, we found
+<code>renderAlignedVoice :: Aligned (Voice a) -&gt; Score a</code>. Plausibly
+it will be easy to render a Score!
+</p>
+
+<pre class="example">
+ghci&gt; :i Score
+
+[...]
+instance (HasDynamicNotation a b c, HasArticulationNotation c d e,
+     Music.Score.Part.Part e ~ Music.Score.Part.Part c, HasOrdPart a,
+     Transformable a, Semigroup a, Tiable e, HasOrdPart c,
+     Show (Music.Score.Part.Part c),
+     HasLilypondInstrument (Music.Score.Part.Part c),
+     Music.Score.Export.Lilypond.Satisfied) =&gt;
+    HasBackendScore Lilypond (Score a)
+-- Defined in ‘Music.Score.Export.Lilypond’
+[...]
+</pre>
+<p>
+Hmm, Lilypond stuff, let's do this. So ok, now we have a <b>Score
+Pitch</b> and we want a <b>Score StandardNote</b>. <b>fmap</b> comes
+immediately to mind, but there is not a function which turns a
+Pitch into a StandardNote (why?). Luckily again, the author
+suggested me the solution: 
+</p>
+</li>
+</ol>
+
+<div class="org-src-container">
+
+<pre class="src src-haskell">render :: Counterpoint -&gt; Score StandardNote
+render = fmap (fromPitch' . pure) . renderAlignedVoice 
+
+action :: IO ()
+action = writeLilypond "cantus.ly" $ render cantus
+</pre>
+</div>
+
+<p>
+The problem is whith the type of the things:
+</p>
+<pre class="example">
+pure :: Pitch -&gt; Behaviour Pitch
+fromPitch' :: Behaviour Pitch -&gt; StandardNote
+</pre>
+<p>
+To convert between a Pitch and a StandardNote, I had to pass through a <b>Behaviour</b>.
+I couln't imagine this on my own!
+</p>
+
+<p>
+So, here is't the first installment. Next time I'll try to add
+annotations to that score, a feature that seems broken for the time
+being. Here is the complete code we wrote:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-haskell">import Music.Prelude
+
+permittedMelodicIntervals :: [Interval]
+permittedMelodicIntervals = [ perfect unison, major second, minor second
+                            , major third,    minor third,  perfect fourth
+                            , perfect fifth,  major sixth,  minor sixth
+                            , perfect octave]
+
+type Counterpoint = Aligned (Voice Pitch)
+
+cantus :: Counterpoint 
+cantus = [d, a, g, f, e, d, f, e, d] ^. voice . to (aligned 0 0)
+
+render :: Counterpoint -&gt; Score StandardNote
+render = fmap (fromPitch' . pure) . renderAlignedVoice 
+
+action :: IO ()
+action = writeLilypond "cantus.ly" $ render cantus
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: Carlo Nucera</p>
+<p class="date">Created: 2014-12-08 Mon 09:01</p>
+<p class="creator"><a href="http://www.gnu.org/software/emacs/">Emacs</a> 24.4.1 (<a href="http://orgmode.org">Org</a> mode 8.2.10)</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>
