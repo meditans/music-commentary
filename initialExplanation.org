@@ -1,0 +1,66 @@
+* The original goal of Music Suite
+  was to generalize music notation.
+
+  As a trained composer I have been taught how to work not just with
+  the common notions of pitch and rhythm (c sharp, quarter notes etc),
+  but also with other systems such as enharmonic 12/tone musical set
+  theory, quarter tones, other notions of microtonality etc.
+
+  I was concerned that standard notation systems and software like
+  Sibelius/Finale was unable to handle this richness of material, and
+  wanted a system in which various levels of strictness could be
+  applied to time, pitch and other musical aspects. I then split the
+  library into 5 musical aspects, namely time, pitch, dynamics,
+  articulation and parts (instrumentation, timbre etc). The idea is
+  that the libraries define various types used to represent pitch,
+  dynamics etc, and that these can be composed by the user. In
+  practice we often just want to use a standard representation, which
+  is why the preludes package was created.
+
+  As you can probably tell, the Music.Time hierarchy contains musical
+  time structures (similar to containers, but all based on the notion
+  of placing or orienting values in time), partly inspired by FRP, and
+  completely separate from the other musical aspects.
+
+  The goal and main challenge of the library is how to keep the
+  aspects separate and allow the user to combine them in a useful
+  way. Because music has so *many* aspects (at least 5, and others
+  such as space might also be interesting to add) we might easily run
+  into types with a lot of parameters.
+
+  Imagine for example that we had a type called S used to represent a
+  list of events with onset and offsets, and wanted to parameterize
+  pitch, dynamics and articulation: That would give us a type
+  signature on the form "Score StandardPitch Hertz ()" etc, which I
+  think is to obtrusive, especially as this type will turn up quite
+  often (compare ParsecT in parsec).
+
+  The solution I adopted was to treat time structures as parametric
+  types of kind =(* -> *)= and use type functions to access the
+  aspects. Thus we can get away with only one parameter, and use
+  constructions such as 
+  #+BEGIN_EXAMPLE
+  showScorePithes :: Show (Pitch a) => Score a -> [String]
+  #+END_EXAMPLE
+
+* The most important types in the library
+
+- Music.Pitch.Common.Pitch :: Western pitch, distinguishes between f# and gb etc.
+- Music.Pitch.Common.Interval :: Western intervals, distinguishes d5 and A4 etc.
+- Music.Parts.Part :: Represents a musical part, i.e. an instrument and optional subdivision (Violin I.2, Flute I, Solo Horn etc.)
+- Music.Dynamics.Dynamic :: Represents a single dynamic level
+- Music.Articulation.Articulation :: Represents a single musical articulation
+- Music.Time.Time :: Represents a point in time
+- Music.Time.Duration :: Represents the distance between two points in time (a vector in time)
+- Music.Time.Span :: Represents two points in time (the span of a musical note for example)
+- Music.Time.Note :: A value with an attached duration
+- Music.Time.Event :: A value with an attached span
+- Music.Time.Voice :: A sequential composition of notes
+- Music.Time.Score :: A parallel composition of events
+- Music.Time.Behavior :: A continously time-varying value (same as in FRP)
+- Music.Time.Reactive :: A discretely time-varying value (same as in FRP)
+
+The many similarly named constructions for things such as Pitches and Interval is a consequence of this, as we need to distinguish:
+- Pitch as commonly defined in Common Practice Western Music (Interval and Pitch in Music.Pitch.Common)
+- The names c, d, e, f, g etc (IsInterval and IsPitch)
+- The associated pitch type of another type (Music.Score.Pitch). For example if you build up a parallel collection of voices of common pitches, their pitch type is common pitch. This is what allows you to use functions such as _8va on single notes as well as on scores.
