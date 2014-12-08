@@ -154,6 +154,23 @@ fromPitch' :: Behaviour Pitch -> StandardNote
 To convert between a Pitch and a StandardNote, I had to pass through a *Behaviour*.
 I couln't imagine this on my own!
 
+
+* HH comment
+ This has to do with the Pitch type of a (Behavior a) being a behavior itself
+ rather than a. This is necessary when traversing a deep structure containing
+ time-varying pitch values at the bottom (we can't traverse a behavior, so we
+ have to receive the behavior as part of the traversal).
+
+ O.t.o.h, the function fromPitch' works by constructing a default value (of
+ any level of complexity) and replacing its pitch using the traversal (its
+ definition is simply (fromPitch' x = set pitch' x c), where c could be any
+ pitch literal).
+
+ For this reason it might be necessary to chuck time-varying pitches 
+ from the standard prelude, i.e. make standard notes using Pitch instead
+ of (Behavior Pitch).
+
+
 So, here is't the first installment. Next time I'll try to add
 annotations to that score, a feature that seems broken for the time
 being. Here is the complete code we wrote:
