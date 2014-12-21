@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
 <title>exCommentary2</title>
-<!-- 2014-12-21 Sun 14:36 -->
+<!-- 2014-12-21 Sun 15:44 -->
 <meta  http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta  name="generator" content="Org-mode" />
 <meta  name="author" content="Carlo Nucera" />
@@ -144,7 +144,10 @@ for the JavaScript code in this tag.
 <ul>
 <li><a href="#sec-1">1. Second installment</a>
 <ul>
-<li><a href="#sec-1-1">1.1. Types</a></li>
+<li><a href="#sec-1-1">1.1. Two Parts First Species Counterpoint</a></li>
+<li><a href="#sec-1-2">1.2. Getters to access the upper and lower voices</a></li>
+<li><a href="#sec-1-3">1.3. Rendering a simple realization of a counterpoint exercise</a></li>
+<li><a href="#sec-1-4">1.4. Changing clefs and instrument name</a></li>
 </ul>
 </li>
 </ul>
@@ -183,29 +186,22 @@ action = writeLilypond "cantus.ly" $ render cantus
 </div>
 
 <p>
-We forget for a minute the annotation problem (the action function
-freezes on execution), as there is a bug which prevents the
-compilation of the examples. So, let's focus on how we could write two
-counterpoints and check their mutual relationship, in a generic way,
-ie. a way that will work when we will begin to write exercices in
-three parts.
+So, our final goal is to write a counterpoint over a cantus firmus and
+check their mutual relationship, in a generic way (ie. a way that will
+work when we will begin to write exercices in three parts).  We begin
+here by representing an exercise.
 </p>
 </div>
 
 <div id="outline-container-sec-1-1" class="outline-3">
-<h3 id="sec-1-1"><span class="section-number-3">1.1</span> Types</h3>
+<h3 id="sec-1-1"><span class="section-number-3">1.1</span> Two Parts First Species Counterpoint</h3>
 <div class="outline-text-3" id="text-1-1">
 <p>
-So, we know that we should use the counterpointVoice to model a
-voice. Let's model a two parts first species counterpoint,
-instead. For musical theoretical reasons, we want to distinguish
-the position of the cantus with respect to that of the counterpoint
-itself.
-</p>
-
-<p>
-The first design I have in my mind is to create Two Parts First
-Species Counterpoint
+Last time, we used counterpointVoice to model a voice. Let's model
+a two parts first species counterpoint. For musical theoretical
+reasons, we want to distinguish the position of the cantus with
+respect to that of the counterpoint itself. The first design that
+comes in mind is:
 </p>
 
 <div class="org-src-container">
@@ -219,101 +215,100 @@ data TPFSC = TPFSC { topVoice :: CounterpointVoice
 
 <p>
 Here arises a problem. The Eq deriving is incorrect, as the program
-doesn't know how _what?
-It knows that
+doesn't know how to derive the Eq instance for CounterpointVoice.
+Why is this? We know that:
+</p>
+
+<pre class="example">
+counterpointVoice = Aligned (Voice Pitch)
+</pre>
+
+<p>
+So, let's look at <code>Eq</code> instance for <code>Aligned</code>. Ok, there isn't one
+(there is the <code>Show</code> one, however). Is that necessary by design?
+For now, let's remove the <code>Eq</code> instance, however. Let's also
+include a smart constructor for counterpoints to concentrate on the
+pitches, without worrying about the plumbing.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-haskell">data TPFSC = TPFSC { _cantusFirmus :: CounterpointVoice
+                   , _counterpoint :: CounterpointVoice
+                   } deriving (Show)
+
+makeLenses ''TPFSC
+
+tpfsc :: [Note Pitch] -&gt; [Note Pitch] -&gt; TPFSC
+tpfsc a b = TPFSC
+  { _counterpoint = a ^. voice . to (aligned 0 0)
+  , _cantusFirmus = b ^. voice . to (aligned 0 0)
+  }
+</pre>
+</div>
+
+<p>
+With this, we can write:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-haskell">example :: TPFSC
+example = TPFSC
+  { _cantusFirmus = [d, a, g, f, e, d, f, e, d] ^. voice . to (aligned 0 0)
+  , _counterpoint = (_8va [d, c, e, f, g, f, d, cs, d]) ^. voice . to (aligned 0 0)
+  }
+
+example' :: TPFSC
+example' = tpfsc [d, a, g, f, e, d, f, e, d] (_8va [d, c, e, f, g, f, d, cs, d])
+</pre>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-sec-1-2" class="outline-3">
+<h3 id="sec-1-2"><span class="section-number-3">1.2</span> Getters to access the upper and lower voices</h3>
+<div class="outline-text-3" id="text-1-2">
+<p>
+Two check that the rules of simple counterpoint hold, we have two
+needs:
 </p>
 <ol class="org-ol">
-<li>Show a =&gt; Show (Aligned a)
+<li>Being able to distinguish the upper from the lower voice. 
 </li>
-<li>(Show a, Transformable a) =&gt; Show (Voice a)
-</li>
-</ol>
-
-<p>
-So, is there a `Trasformable Pitch` instance? It doesn't seem, from
-the module in <a href="https://hackage.haskell.org/package/music-score-1.8/docs/Music-Time-Transform.html">Music.Time.Transform</a>. Why is this? I mean, Pitch is
-obviously not a Transformable, but why do they not have a show
-instance?  Besides, navigating this imports to see which instances
-exist is a bit tiresome if you don't know where these instances are
-in advance (in my experience they usually are in some Music.Score
-submodule).
-</p>
-
-<p>
-For now, I'm removing the Show instance.
-</p>
-
-<p>
-As the duration value of both voices is identical, we need means to
-distinguish which of the two is our counterpoint and which is the
-cantus.
-</p>
-
-<p>
-Or we could simply record the voice in the field information, and
-provide later to decide if the voice si up or below the
-counterpoint. This has the disadvantage of not permitting in a safe.
-</p>
-
-<p>
-We'll write simply two lenses which let us focus on the upper and
-lower voices, as we need. This extension is.
-</p>
-
-<p>
-So, by design, we have two needs:
-</p>
-<ol class="org-ol">
-<li>The need to distinguish the upper from the lower voice. 
-</li>
-<li>The need to distinguish the cantus firmus from the counterpoint
+<li>Being able to distinguish the cantus firmus from the counterpoint
 exercise.
 </li>
 </ol>
 
 <p>
-As the information about position is completely visible from the
-counterpoint, we'll store the information about cantus and
-counterpoint in the data itself, leaving position to an appropriate lens.
+Now, the cantus/counterpoint information is stored in the data
+itself, so let's think how to access the upper/lower voice.
 </p>
-
-<div class="org-src-container">
-
-<pre class="src src-haskell">-- Two parts first species counterpoint
-data TPFSC = TPFSC { _cantusFirmus :: CounterpointVoice
-                   , _counterpoint :: CounterpointVoice
-                   } deriving (Eq, Show)
-
-mkLenses TPFSC'
-
-upperVoice :: Lens' TPFSC CounterpointVoice
-upperVoice = lens
-             (qui ci va una funzione che selezioni la voce piu' alta)
-             (qui ci va una funzione che riscriva,
-               se la voce mantiene la sua altezza relativa)
-</pre>
-</div>
 
 <p>
 How do we know which voice is higher? It suffices to check the
-first note (as we're not permitting voice overlapping).
-After a bit of thougth, I think I have two possibilities:
+first note (as we're not permitting voice overlapping).  After a
+bit of thougth, I think I have two possibilities:
 </p>
 
-<ol class="org-ol">
-<li>Using a getter :: this solution is totally correct, but I have
+<dl class="org-dl">
+<dt> Using a getter </dt><dd>this solution is totally correct, but I have
 the downside of not being able to change the upper part, if I
 want.
-</li>
-<li>Using a misbehaved lens :: I generally don't like to break laws
-in my code, but this could give me the possibility of changing
-the last note of the upper part.
-</li>
-</ol>
+</dd>
+<dt> Using a misbehaved lens </dt><dd>(It's misbehaved because I could
+modify the upper voice transforming it into wht lower one) I
+generally don't like to break laws in my code, but this could
+give me the possibility of changing the last note of the upper
+part.
+</dd>
+</dl>
 
 <p>
 As I find the possibility to change something in the upper part not
-so tremendously useful, I'll make a getter.
+so tremendously useful, I'll make a getter (id est, a function xd).
 </p>
 
 <div class="org-src-container">
@@ -382,8 +377,13 @@ lowerVoice c = if c^?!cantusFirmus.firstNote &gt;= c^?!counterpoint.firstNote
       firstNote = to renderAlignedVoice . events . traverse . from event . _2
 </pre>
 </div>
+</div>
+</div>
 
 
+<div id="outline-container-sec-1-3" class="outline-3">
+<h3 id="sec-1-3"><span class="section-number-3">1.3</span> Rendering a simple realization of a counterpoint exercise</h3>
+<div class="outline-text-3" id="text-1-3">
 <p>
 So, let's write a simple realization of the cantus firmus.
 </p>
@@ -405,40 +405,44 @@ difficulty is the fact that we used the function
 </p>
 
 <p>
-Let's explore the <code>Aligned</code> module. 
+Let's explore the <code>Aligned</code> module. Nothing. Ok, can we merge two
+<code>Score Pitch</code>? Well, it's an istance of monoid, and I do not see
+other merge function on first sight, so let's try:
 </p>
 
+<div class="org-src-container">
+
+<pre class="src src-haskell">renderTPFSC :: TPFSC -&gt; IO ()
+renderTPFSC es = writeLilypond "composto.ly" $
+                               (render . upperVoice $ es) &lt;&gt; (render . lowerVoice $ es)
+</pre>
+</div>
+
 <p>
-Ok, can we merge two <code>Score Pitch</code>? Well, it's an istance of
-monoid, and I do not see other merge function on first sight, so
-let's try:
+Ok, that was good, but we have both voices in the same
+pentagram. Now, I'd like to be able to split the exercise using two
+pentagrams. For that, I'm going to check the documentation. In fact
+this is well expressed in the docs. The point is the <code>&lt;/&gt;</code>
+operator, so:
 </p>
 
-<p>
-TODO
-Ok, that was good.
-</p>
+<div class="org-src-container">
 
-<p>
-TODO Let's include a smart constructor for counterpoints that let's
-us concentrate on the pitch, without worrying about the plumbing.
-</p>
+<pre class="src src-haskell">renderTPFSC :: TPFSC -&gt; IO ()
+renderTPFSC es = writeLilypond "composto.ly" $
+                               (render . upperVoice $ es) &lt;/&gt; (render . lowerVoice $ es)
+</pre>
+</div>
+</div>
+</div>
 
 
+<div id="outline-container-sec-1-4" class="outline-3">
+<h3 id="sec-1-4"><span class="section-number-3">1.4</span> Changing clefs and instrument name</h3>
+<div class="outline-text-3" id="text-1-4">
 <p>
-Ok, that was good to have in the same pentagram. Now, I'd like to
-be able to split the exercise using two pentagrams.
-</p>
-
-<p>
-For that, I'm going to check the documentation. In fact this is
-well expressed in the docs, if one knows where to search. The point
-is the <code>&lt;/&gt;</code> operator. Good, so we now have only to change the
-default keys, using the module <code>Music.Score.Meta.Clef</code>.
-</p>
-
-<p>
-my first try is
+We now have only to change the default keys, using the module
+<code>Music.Score.Meta.Clef</code>. My first try is:
 </p>
 
 <div class="org-src-container">
@@ -449,14 +453,11 @@ renderTPFSCWithClef es = writeLilypond "composto.ly" $
 </pre>
 </div>
 
-
 <p>
-Argh, it doesn't work, and the docs have a TODO marked for an example :P
-</p>
-
-<p>
-I think this is because <code>CounterpointVoice = Aligned (Voice Pitch)</code>
-lacks a <code>HasMeta</code> instance. But <code>Score</code> does have one, so let's try:
+Argh, it doesn't work, and the docs have a TODO marked for an
+example :P. I think this is because <code>CounterpointVoice = Aligned
+   (Voice Pitch)</code> lacks a <code>HasMeta</code> instance. But <code>Score</code> does have
+one, so let's try:
 </p>
 
 <div class="org-src-container">
@@ -468,13 +469,14 @@ renderTPFSCWithClef es = writeLilypond "composto.ly" $
 </div>
 
 <p>
-Well, this does compile, but the result is unchanged. Why is this?
+Well, this does compile, but <b>the result is unchanged</b>. Why is this?
 What should I do to change the lower clef?
 </p>
 
 <p>
-So, I'll close this installment with a question: how do we
-eliminate instruments annotations from the generated pdf?
+To end this installment, I'll pose a question: how do I eliminate
+instruments annotations from the generated pdf? I wasn't able to
+find anything like that in the documentation.
 </p>
 </div>
 </div>
@@ -482,7 +484,7 @@ eliminate instruments annotations from the generated pdf?
 </div>
 <div id="postamble" class="status">
 <p class="author">Author: Carlo Nucera</p>
-<p class="date">Created: 2014-12-21 Sun 14:36</p>
+<p class="date">Created: 2014-12-21 Sun 15:44</p>
 <p class="creator"><a href="http://www.gnu.org/software/emacs/">Emacs</a> 24.4.1 (<a href="http://orgmode.org">Org</a> mode 8.2.10)</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
