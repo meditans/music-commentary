@@ -1,0 +1,229 @@
+* Second installment
+  Here is the second installment in the series which explores the
+  functioning of the music-suite library. Here is the code we wrote
+  last time:
+
+#+BEGIN_SRC haskell
+import Music.Prelude
+
+permittedMelodicIntervals :: [Interval]
+permittedMelodicIntervals = [ perfect unison, major second, minor second
+                            , major third,    minor third,  perfect fourth
+                            , perfect fifth,  major sixth,  minor sixth
+                            , perfect octave]
+
+type CounterpointVoice = Aligned (Voice Pitch)
+
+cantus :: CounterpointVoice 
+cantus = [d, a, g, f, e, d, f, e, d] ^. voice . to (aligned 0 0)
+
+render :: CounterpointVoice -> Score StandardNote
+render = fmap (fromPitch' . pure) . renderAlignedVoice 
+
+action :: IO ()
+action = writeLilypond "cantus.ly" $ render cantus
+#+END_SRC
+  
+We forget for a minute the annotation problem (the action function
+freezes on execution), as there is a bug which prevents the
+compilation of the examples. So, let's focus on how we could write two
+counterpoints and check their mutual relationship, in a generic way,
+ie. a way that will work when we will begin to write exercices in
+three parts.
+
+** Types
+   So, we know that we should use the counterpointVoice to model a
+   voice. Let's model a two parts first species counterpoint,
+   instead. For musical theoretical reasons, we want to distinguish
+   the position of the cantus with respect to that of the counterpoint
+   itself.
+ 
+   The first design I have in my mind is to create Two Parts First
+   Species Counterpoint
+
+#+BEGIN_SRC haskell
+  -- Two parts first species counterpoint
+  data TPFSC = TPFSC { topVoice :: CounterpointVoice
+                     , bottomVoice :: CounterpointVoice
+                     } deriving (Eq, Show)
+#+END_SRC
+
+   Here arises a problem. The Eq deriving is incorrect, as the program
+   doesn't know how _what?
+   It knows that
+   1) Show a => Show (Aligned a)
+   2) (Show a, Transformable a) => Show (Voice a)
+
+   So, is there a `Trasformable Pitch` instance? It doesn't seem, from
+   the module in [[https://hackage.haskell.org/package/music-score-1.8/docs/Music-Time-Transform.html][Music.Time.Transform]]. Why is this? I mean, Pitch is
+   obviously not a Transformable, but why do they not have a show
+   instance?  Besides, navigating this imports to see which instances
+   exist is a bit tiresome if you don't know where these instances are
+   in advance (in my experience they usually are in some Music.Score
+   submodule).
+   
+   For now, I'm removing the Show instance.
+   
+   As the duration value of both voices is identical, we need means to
+   distinguish which of the two is our counterpoint and which is the
+   cantus.
+
+   Or we could simply record the voice in the field information, and
+   provide later to decide if the voice si up or below the
+   counterpoint. This has the disadvantage of not permitting in a safe.
+
+   We'll write simply two lenses which let us focus on the upper and
+   lower voices, as we need. This extension is.
+
+   So, by design, we have two needs:
+   1) The need to distinguish the upper from the lower voice. 
+   2) The need to distinguish the cantus firmus from the counterpoint
+      exercise.
+
+   As the information about position is completely visible from the
+   counterpoint, we'll store the information about cantus and
+   counterpoint in the data itself, leaving position to an appropriate lens.
+
+#+BEGIN_SRC haskell
+  -- Two parts first species counterpoint
+  data TPFSC = TPFSC { _cantusFirmus :: CounterpointVoice
+                     , _counterpoint :: CounterpointVoice
+                     } deriving (Eq, Show)
+
+  mkLenses TPFSC'
+
+  upperVoice :: Lens' TPFSC CounterpointVoice
+  upperVoice = lens
+               (qui ci va una funzione che selezioni la voce piu' alta)
+               (qui ci va una funzione che riscriva,
+                 se la voce mantiene la sua altezza relativa)
+#+END_SRC
+
+   How do we know which voice is higher? It suffices to check the
+   first note (as we're not permitting voice overlapping).
+   After a bit of thougth, I think I have two possibilities:
+
+   1) Using a getter :: this solution is totally correct, but I have
+        the downside of not being able to change the upper part, if I
+        want.
+   2) Using a misbehaved lens :: I generally don't like to break laws
+        in my code, but this could give me the possibility of changing
+        the last note of the upper part.
+
+   As I find the possibility to change something in the upper part not
+   so tremendously useful, I'll make a getter.
+
+#+BEGIN_SRC haskell
+upperVoice :: TPFSC -> CounterpointVoice
+upperVoice c = if c^.cantusFirmus.firstNote >= c^.counterpoint.firstNote
+               then c^.cantusFirmus
+               else c^.counterpoint
+    where
+      firstNote :: Lens' CounterpointVoice Pitch
+      firstNote = undefined 
+#+END_SRC
+   
+   Now, the point is, I want to write the lens firstNote, so first
+   thing would be to read inside the Aligned constructor. In the
+   documentation of aligned, I don't seem to find a lens doing that.
+
+   This is a difficulty that I encounter often while toying with the
+   library: often there is a constructor, which lets me create an
+   object, and I'm unable to locate easily the corresponding
+   destructor (or, eventually, the getter).
+
+   Oh, there is something that converts an =Aligned (Voice a)= to a
+   =Score a=. So, let's see if I can read with a lens inside of a
+   =Score a=. It seems that I can read an =Event a= which exposes an
+   iso to =(Span, a)=. So, after that Iso, and _2, I'm getting the
+   Pitch. Let's verify this intuition in ghci.
+
+   #+BEGIN_EXAMPLE
+   ghci> :t cantus ^?! (to renderAlignedVoice . events . traverse . from event . _2)
+   cantus ^?! (to renderAlignedVoice . events . traverse . from event . _2) :: Pitch
+
+   ghci> cantus ^?! (to renderAlignedVoice . events . traverse . from event . _2)
+   d
+   #+END_EXAMPLE
+
+   However, this process, while possible, should in my opinion be streamlined.
+   
+   So, in the end:
+
+#+BEGIN_SRC haskell
+upperVoice :: TPFSC -> CounterpointVoice
+upperVoice c = if c^?!cantusFirmus.firstNote >= c^?!counterpoint.firstNote
+               then c^.cantusFirmus
+               else c^.counterpoint
+    where
+      firstNote = to renderAlignedVoice . events . traverse . from event . _2
+
+lowerVoice :: TPFSC -> CounterpointVoice
+lowerVoice c = if c^?!cantusFirmus.firstNote >= c^?!counterpoint.firstNote
+               then c^.counterpoint
+               else c^.cantusFirmus
+    where
+      firstNote = to renderAlignedVoice . events . traverse . from event . _2
+#+END_SRC
+
+
+   So, let's write a simple realization of the cantus firmus.
+
+   #+BEGIN_SRC haskell
+   example = TPFSC
+    { _cantusFirmus = [d, a, g, f, e, d, f, e, d] ^. voice . to (aligned 0 0)
+    , _counterpoint = [d', a, g, f, e, d, f, e, d] ^. voice . to (aligned 0 0)
+    }
+   #+END_SRC
+
+   Now, let's move towards the rendering of this exercise. Now, the
+   difficulty is the fact that we used the function
+   =renderAlignedVoice=, which has type =Aligned (Voice Pitch) ->
+   Score Pitch=. How do we extend this to the two voices?
+   
+   Let's explore the =Aligned= module. 
+
+   Ok, can we merge two =Score Pitch=? Well, it's an istance of
+   monoid, and I do not see other merge function on first sight, so
+   let's try:
+
+   TODO
+   Ok, that was good.
+
+   TODO Let's include a smart constructor for counterpoints that let's
+   us concentrate on the pitch, without worrying about the plumbing.
+   
+
+   Ok, that was good to have in the same pentagram. Now, I'd like to
+   be able to split the exercise using two pentagrams.
+
+   For that, I'm going to check the documentation. In fact this is
+   well expressed in the docs, if one knows where to search. The point
+   is the =</>= operator. Good, so we now have only to change the
+   default keys, using the module =Music.Score.Meta.Clef=.
+
+   my first try is
+
+#+BEGIN_SRC haskell
+renderTPFSCWithClef :: TPFSC -> IO ()
+renderTPFSCWithClef es = writeLilypond "composto.ly" $
+                               (render . upperVoice $ es) </> (render . clef CClef . lowerVoice $ es)
+#+END_SRC
+
+   
+   Argh, it doesn't work, and the docs have a TODO marked for an example :P
+
+   I think this is because =CounterpointVoice = Aligned (Voice Pitch)=
+   lacks a =HasMeta= instance. But =Score= does have one, so let's try:
+
+#+BEGIN_SRC haskell
+renderTPFSCWithClef :: TPFSC -> IO ()
+renderTPFSCWithClef es = writeLilypond "composto.ly" $
+                               (render . upperVoice $ es) </> clef CClef (render . lowerVoice $ es)
+#+END_SRC
+
+   Well, this does compile, but the result is unchanged. Why is this?
+   What should I do to change the lower clef?
+
+   So, I'll close this installment with a question: how do we
+   eliminate instruments annotations from the generated pdf?
