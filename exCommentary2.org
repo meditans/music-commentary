@@ -250,3 +250,14 @@ renderTPFSCWithClef es = writeLilypond "composto.ly" $
    To end this installment, I'll pose a question: how do I eliminate
    instruments annotations from the generated pdf? I wasn't able to
    find anything like that in the documentation.
+   
+  #+BEGIN_QUOTE
+  Unfortunately, the clef meta-data property is not read corrently by the backends at the moment.
+  As a workaround, you can simply set the part to something that uses bass clef by default, i.e
+  
+  =set parts' violins (render . upperVoice $ es) <> set parts' cellos (render . lowerVoice $ es)=
+  
+  Note that it is =<>= in that case, as you =</>= does not play nice with =set parts'=.
+  
+  /HH
+  #+END_QUOTE
