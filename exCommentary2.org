@@ -57,6 +57,11 @@ here by representing an exercise.
    include a smart constructor for counterpoints to concentrate on the
    pitches, without worrying about the plumbing.
    
+   #+BEGIN_QUOTE
+   The missing Eq instance has now been added. /HH
+   #+END_QUOTE
+
+   
 #+BEGIN_SRC haskell
 data TPFSC = TPFSC { _cantusFirmus :: CounterpointVoice
                    , _counterpoint :: CounterpointVoice
@@ -146,6 +151,20 @@ upperVoice c = if c^.cantusFirmus.firstNote >= c^.counterpoint.firstNote
    #+END_EXAMPLE
 
    However, this process, while possible, should in my opinion be streamlined.
+   
+   #+BEGIN_QUOTE
+   Note that you can't really make a *lens* from a voice (aligned or not) to its first element, as
+   there might not be one (the voice may be empty!). In contrast to the Prelude, the lens API does
+   not throw exceptions of empty values, so the distinction between lenses and prisms/traversals
+   is important.
+   
+   If you are just interested in the first element, you can use =_head= rather than =traverse=, which
+   gives you a prism (i.e. a traversal of 0 or 1 elements) to the head, rather than a traversal to
+   all elements.
+   
+   You could also use =pitch= instead of =from event . _2= (or =eventee= if you are dealing with some
+   non-aspect type). That would give you =(to renderAlignedVoice.events._head.pitch :: Traversal CounterpointVoice Pitch)=.
+   #+END_QUOTE
    
    So, in the end:
 
