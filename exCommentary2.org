@@ -164,6 +164,8 @@ upperVoice c = if c^.cantusFirmus.firstNote >= c^.counterpoint.firstNote
    
    You could also use =pitch= instead of =from event . _2= (or =eventee= if you are dealing with some
    non-aspect type). That would give you =(to renderAlignedVoice.events._head.pitch :: Traversal CounterpointVoice Pitch)=.
+   
+   /HH
    #+END_QUOTE
    
    So, in the end:
