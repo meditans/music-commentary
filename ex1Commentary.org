@@ -161,14 +161,13 @@ rather than a. This is necessary when traversing a deep structure containing
 time-varying pitch values at the bottom (we can't traverse a behavior, so we
 have to receive the behavior as part of the traversal).
 
-O.t.o.h, the function fromPitch' works by constructing a default value (of
-any level of complexity) and replacing its pitch using the traversal (its
-definition is simply (fromPitch' x = set pitch' x c), where c could be any
-pitch literal).
-
-For this reason it might be necessary to chuck time-varying pitches 
-from the standard prelude, i.e. make standard notes using Pitch instead
-of (Behavior Pitch). /HH
+In the current master of music-preludes, behaviors have been removed from
+the default note, so you can replace (fromPitch' . pure) with just fromPitch'.
+In a future version we should make fromPitch have the type (IsPitch a => Pitch -> a),
+so you can replace fromPitch' with fromPitch as well. In other words fromPitch would
+be a function that creates a default container structure from its pitch representation
+for any type that has a notion of pitch (notes, scores, events etc).
+/HH
 #+END_QUOTE
 
 
