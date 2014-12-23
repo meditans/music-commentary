@@ -154,8 +154,8 @@ upperVoice c = if c^.cantusFirmus.firstNote >= c^.counterpoint.firstNote
    
    #+BEGIN_QUOTE
    Note that you can't really make a *lens* from a voice (aligned or not) to its first element, as
-   there might not be one (the voice may be empty!). In contrast to the Prelude, the lens API does
-   not throw exceptions of empty values, so the distinction between lenses and prisms/traversals
+   there might not be one (the voice may be empty!). In contrast to the Prelude, the lens API tries
+   not to throw exceptions on empty values, so the distinction between lenses and prisms/traversals
    is important.
    
    If you are just interested in the first element, you can use =_head= rather than =traverse=, which
